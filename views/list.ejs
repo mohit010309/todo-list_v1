@@ -7,12 +7,21 @@
     <div class="box">
         
             <%if(newListItem.length!=0){%>
-                <%for(var i=0;i<newListItem.length;i++){%>
+
+                <%newListItem.forEach(function(elem){%>
+                    <form action="/delete" method="post">
+                        <div class="item">
+                            <input name="checkbox" type="checkbox" onChange="this.form.submit()" value="<%=elem._id%>"/>
+                            <p><%=elem.name%></p>
+                        </div>
+                    </form>
+                <%})%>
+                <!-- for(var i=0;i<newListItem.length;i++){
                     <div class="item">
                     <input type="checkbox"/>
-                    <p><%=newListItem[i]%></p>
+                    <p>newListItem[i].name</p>
                 </div>
-                <%}%>
+                } -->
             <%}%>
             <form class="item" action="/" method="post">
                 <input type="text" name="newItem" placeholder="Enter new item..." autocomplete="off"/>
