@@ -16,7 +16,12 @@ const itemsSchema = new mongoose.Schema({
     name:String
 });
 
+const workSchema = new mongoose.Schema({
+    name:String
+});
+
 const ItemModel = mongoose.model("item",itemsSchema);
+const workModel = mongoose.model("work",workSchema);
 
 
 // creating default documents ( displayed each day )
@@ -84,18 +89,23 @@ app.post("/",function(req,res){
     const itemName = req.body.newItem;
     let query=req.body.button;
 
-    const itemDoc = new ItemModel({
-        name:itemName
-    });
-    itemDoc.save();
+    
     // data successfully added to database
 
     if(query==="Work List")
     {
+        const workDoc = new workModel({
+            name:itemName
+        });
+        workDoc.save();
         console.log("Inside work route...");
         res.redirect("/work");
     }
     else{
+        const itemDoc = new ItemModel({
+            name:itemName
+        });
+        itemDoc.save();
         console.log("Inside home route...");
         res.redirect("/");
     }
@@ -104,7 +114,9 @@ app.post("/",function(req,res){
 
 // Adding Work route
 app.get("/work",function(req,res){
-    res.render("list",{dayWeek:'Work List',newListItem:work});
+    workModel.find({}).then(function(data){
+        res.render("list",{dayWeek:'Work List',newListItem:data});
+    });
 });
 
 // Adding about route
