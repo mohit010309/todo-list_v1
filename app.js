@@ -4,7 +4,7 @@ const mongoose=require('mongoose');
 const app=express();
 const date=require(__dirname+'/module1.js');
 // console.log(date());
-console.log(date);
+//console.log(date);
 app.set('view engine','ejs');
 app.use(bodyParser.urlencoded({extended:true}));
 app.use(express.static("public"));
@@ -16,12 +16,12 @@ const itemsSchema = new mongoose.Schema({
     name:String
 });
 
-const workSchema = new mongoose.Schema({
-    name:String
-});
+// const workSchema = new mongoose.Schema({
+//     name:String
+// });
 
 const ItemModel = mongoose.model("item",itemsSchema);
-const workModel = mongoose.model("work",workSchema);
+//const workModel = mongoose.model("work",workSchema);
 
 
 // creating default documents ( displayed each day )
@@ -40,7 +40,12 @@ const docsArray = [defDoc1,defDoc2,defDoc3];
 // adding documents in mongoDB database
 // ItemModel.insertMany(docsArray);
 
+const listSchema = {
+    name:String,
+    items:[itemsSchema]
+};
 
+const listModel = mongoose.model("list",listSchema);
 
 app.listen(3000,function(){
     console.log("Server is running on port 3000");
@@ -70,6 +75,7 @@ app.get("/",function(req,res){
 });
 
 app.post("/",function(req,res){
+    dayType=date.getDate();
     // let query=req.body.button;
     // let itemName=req.body.newItem;
     // if(query==="Work List")
@@ -87,37 +93,39 @@ app.post("/",function(req,res){
 
     // using mongoose to post new items
     const itemName = req.body.newItem;
-    let query=req.body.button;
+    const listName = req.body.button;
+    //let query=req.body.button;
 
     
     // data successfully added to database
-
-    if(query==="Work List")
+    const itemDoc = new ItemModel({
+        name:itemName
+    });
+    if(listName===dayType)
     {
-        const workDoc = new workModel({
-            name:itemName
-        });
-        workDoc.save();
-        console.log("Inside work route...");
-        res.redirect("/work");
-    }
-    else{
-        const itemDoc = new ItemModel({
-            name:itemName
-        });
         itemDoc.save();
         console.log("Inside home route...");
         res.redirect("/");
     }
-
+    else
+    {
+        listModel.findOne({name:listName}).then(function(logs){
+            console.log(logs);
+            logs.items.push(itemDoc);
+            logs.save().then(function(){
+                res.redirect("/"+listName);
+            }); 
+        });
+    }
+    
 });
 
 // Adding Work route
-app.get("/work",function(req,res){
-    workModel.find({}).then(function(data){
-        res.render("list",{dayWeek:'Work List',newListItem:data});
-    });
-});
+// app.get("/work",function(req,res){
+//     workModel.find({}).then(function(data){
+//         res.render("list",{dayWeek:'Work List',newListItem:data});
+//     });
+// });
 
 // Adding about route
 app.get("/about",function(req,res){
@@ -131,5 +139,39 @@ app.post("/delete",function(req,res){
     ItemModel.findByIdAndRemove(checkedID).then(function(logs){
         console.log(logs);
         res.redirect("/");
+    });
+});
+
+
+// using express-route parameters to add a custom route
+app.get("/:custRoute",function(req,res){
+    // console.log("Inside custom route");
+    // res.send(req.params.custRoute);
+
+    const custListName = req.params.custRoute;
+    listModel.findOne({name:custListName}).then(function(logs){
+        //console.log(logs);
+        if(logs===null)
+        {
+            //create a new list
+            const list = new listModel({
+                name:custListName,
+                items:docsArray
+            });
+        
+            list.save();
+            console.log("List created");
+            res.redirect("/"+custListName);
+        }
+        else
+        {
+            //show the new list
+            console.log("List is present");
+            res.render("list",{
+                dayWeek: logs.name,
+                newListItem: logs.items
+            });
+        }
+        
     });
 });
