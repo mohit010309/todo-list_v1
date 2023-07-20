@@ -1,6 +1,7 @@
 const express=require('express');
 const bodyParser=require('body-parser');
 const mongoose=require('mongoose');
+const _=require('lodash');
 const app=express();
 const date=require(__dirname+'/module1.js');
 // console.log(date());
@@ -135,11 +136,25 @@ app.get("/about",function(req,res){
 // Adding delete route
 app.post("/delete",function(req,res){
     // console.log(req.body.checkbox);
+    dayType=date.getDate();
+
     const checkedID = req.body.checkbox;
-    ItemModel.findByIdAndRemove(checkedID).then(function(logs){
-        console.log(logs);
-        res.redirect("/");
-    });
+    const listName = req.body.hiddenIP;
+
+    if(listName===dayType)
+    {
+        ItemModel.findByIdAndRemove(checkedID).then(function(logs){
+            console.log(logs);
+            res.redirect("/");
+        });
+    }
+    else
+    {
+        listModel.findOneAndUpdate({name:listName},{$pull:{items:{_id:checkedID}}}).then(function(logs){
+            console.log(logs);
+            res.redirect("/"+listName);
+        });
+    }
 });
 
 
@@ -148,7 +163,7 @@ app.get("/:custRoute",function(req,res){
     // console.log("Inside custom route");
     // res.send(req.params.custRoute);
 
-    const custListName = req.params.custRoute;
+    const custListName = _.capitalize(req.params.custRoute);
     listModel.findOne({name:custListName}).then(function(logs){
         //console.log(logs);
         if(logs===null)
