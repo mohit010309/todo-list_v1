@@ -18,7 +18,7 @@ Modules used :
 3) Mongoose
 
 
-To run the application, first clone the repository and run command "npm build"
+To run the application, first clone the repository and run command "npm install" to install the dependencies.
 
 Now go to localhost:3000/ .
 
